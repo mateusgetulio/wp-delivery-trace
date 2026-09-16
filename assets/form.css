@@ -1,0 +1,40 @@
+.delivery-trace-form {
+	max-width: 32rem;
+}
+
+.delivery-trace-field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+	margin: 0 0 1rem;
+}
+
+.delivery-trace-field input,
+.delivery-trace-field select {
+	padding: 0.5rem;
+	font: inherit;
+}
+
+.delivery-trace-field.has-error input,
+.delivery-trace-field.has-error select {
+	border-color: #b32d2e;
+}
+
+.delivery-trace-error,
+.delivery-trace-error-summary {
+	color: #b32d2e;
+}
+
+.delivery-trace-notice {
+	padding: 1rem;
+	border-left: 4px solid #00a32a;
+	background: #f0f6f0;
+}
+
+.delivery-trace-hp {
+	position: absolute;
+	left: -9999px;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+}
