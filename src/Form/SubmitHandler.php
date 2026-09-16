@@ -7,13 +7,11 @@
 
 namespace DeliveryTrace\Form;
 
-use DeliveryTrace\Delivery\Deliverer;
 use DeliveryTrace\Storage\EventRepository;
-use DeliveryTrace\Storage\LeadRepository;
-use DeliveryTrace\Storage\Step;
+use RuntimeException;
 
 /**
- * Receives the form, stores the lead before any network call, then makes the first attempt.
+ * The HTTP side of the public form: method check, spam checks and redirects.
  */
 final class SubmitHandler {
 
@@ -24,37 +22,19 @@ final class SubmitHandler {
 	public const SPAM_COUNT_OPTION = 'delivery_trace_spam_count';
 
 	/**
-	 * Lead storage.
+	 * Stores the lead and makes the first attempt.
 	 *
-	 * @var LeadRepository
+	 * @var Intake
 	 */
-	private LeadRepository $leads;
-
-	/**
-	 * Trace storage.
-	 *
-	 * @var EventRepository
-	 */
-	private EventRepository $events;
-
-	/**
-	 * Makes the first delivery attempt.
-	 *
-	 * @var Deliverer
-	 */
-	private Deliverer $deliverer;
+	private Intake $intake;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param LeadRepository  $leads     Lead storage.
-	 * @param EventRepository $events    Trace storage.
-	 * @param Deliverer       $deliverer Makes the first delivery attempt.
+	 * @param Intake $intake Stores the lead and makes the first attempt.
 	 */
-	public function __construct( LeadRepository $leads, EventRepository $events, Deliverer $deliverer ) {
-		$this->leads     = $leads;
-		$this->events    = $events;
-		$this->deliverer = $deliverer;
+	public function __construct( Intake $intake ) {
+		$this->intake = $intake;
 	}
 
 	/**
@@ -91,32 +71,26 @@ final class SubmitHandler {
 			$this->redirect( array( 'delivery_trace' => 'received' ) );
 		}
 
-		$values       = Submission::sanitize( $input );
-		$sanitized_ms = EventRepository::now_ms();
-		$errors       = Submission::validate( $values, Submission::today() );
-		$validated_ms = EventRepository::now_ms();
+		$flags = isset( $input['elapsed_ms'] ) && '' !== $input['elapsed_ms'] ? array() : array( 'no_js' );
 
-		if ( array() !== $errors ) {
-			$token = strtolower( wp_generate_password( 24, false ) );
-			set_transient( 'delivery_trace_form_' . $token, compact( 'values', 'errors' ), 10 * MINUTE_IN_SECONDS );
-			$this->redirect( array( 'delivery_trace_token' => $token ) );
-		}
-
-		$flags   = isset( $input['elapsed_ms'] ) && '' !== $input['elapsed_ms'] ? array() : array( 'no_js' );
-		$lead_id = $this->leads->create( wp_generate_uuid4(), $values, $flags, time() );
-
-		if ( 0 === $lead_id ) {
+		try {
+			$result = $this->intake->accept( $input, $flags, $received_ms );
+		} catch ( RuntimeException $exception ) {
 			wp_die( esc_html__( 'Sorry, your request could not be saved. Please try again.', 'delivery-trace' ), '', array( 'response' => 500 ) );
 		}
 
-		$stored_ms = EventRepository::now_ms();
-
-		$this->events->add( $lead_id, Step::RECEIVED, '', null, null, '', $received_ms );
-		$this->events->add( $lead_id, Step::SANITIZED, '', null, $sanitized_ms - $received_ms, '', $sanitized_ms );
-		$this->events->add( $lead_id, Step::VALIDATED, '', null, $validated_ms - $sanitized_ms, '', $validated_ms );
-		$this->events->add( $lead_id, Step::STORED, '', null, $stored_ms - $validated_ms, '', $stored_ms );
-
-		$this->deliverer->attempt( $lead_id );
+		if ( array() !== $result['errors'] ) {
+			$token = strtolower( wp_generate_password( 24, false ) );
+			set_transient(
+				'delivery_trace_form_' . $token,
+				array(
+					'values' => $result['values'],
+					'errors' => $result['errors'],
+				),
+				10 * MINUTE_IN_SECONDS
+			);
+			$this->redirect( array( 'delivery_trace_token' => $token ) );
+		}
 
 		$this->redirect( array( 'delivery_trace' => 'received' ) );
 	}
