@@ -119,7 +119,8 @@ final class Deliverer {
 		$payload     = json_decode( (string) $lead['payload'], true );
 		$payload     = is_array( $payload ) ? $payload : array();
 		$started     = microtime( true );
-		$result      = $this->send( $lead['uuid'], $payload );
+		$is_demo     = in_array( 'demo', explode( ',', (string) $lead['flags'] ), true );
+		$result      = $this->send( $lead['uuid'], $payload, $is_demo );
 		$duration_ms = (int) round( ( microtime( true ) - $started ) * 1000 );
 
 		list( $classification, $detail ) = $result;
@@ -141,11 +142,16 @@ final class Deliverer {
 	 *
 	 * @param string $uuid    Idempotency key.
 	 * @param array  $payload Stored form values.
+	 * @param bool   $is_demo Whether the lead came from a demo button.
 	 * @return array{0: Classification, 1: string} The classification and the raw detail worth keeping, before scrubbing.
 	 */
-	private function send( string $uuid, array $payload ): array {
+	private function send( string $uuid, array $payload, bool $is_demo ): array {
 		if ( ! $this->config->is_complete() ) {
 			return array( new Classification( Outcome::MISCONFIGURED ), 'DELIVERY_TRACE_CRM_URL or DELIVERY_TRACE_CRM_TOKEN is not defined.' );
+		}
+
+		if ( $is_demo && ! $this->config->uses_demo_crm() ) {
+			return array( new Classification( Outcome::MISCONFIGURED ), 'Demo lead not sent: the CRM URL no longer points at the demo CRM.' );
 		}
 
 		$response = wp_safe_remote_post(

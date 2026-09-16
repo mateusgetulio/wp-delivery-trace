@@ -18,8 +18,8 @@ final class OutcomeClassifier {
 	/**
 	 * Classify an HTTP response.
 	 *
-	 * Statuses outside the known groups, such as a 3xx left after WordPress
-	 * followed its redirects, are treated as permanent so a human looks.
+	 * Statuses outside the known groups, such as a 3xx (redirects are not
+	 * followed), are treated as permanent so a human looks.
 	 *
 	 * @param int         $status             HTTP status code.
 	 * @param string      $body               Response body.

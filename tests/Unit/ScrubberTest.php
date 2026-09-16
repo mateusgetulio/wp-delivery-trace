@@ -25,6 +25,18 @@ final class ScrubberTest extends TestCase {
 		$this->assertSame( '{"error":"[name] already has a tour"}', $this->scrub( '{"error":"MARIA SILVA already has a tour"}' ) );
 	}
 
+	public function test_removes_name_parts_echoed_separately(): void {
+		$this->assertSame( '{"first":"[name]","last":"[name]"}', $this->scrub( '{"first":"maria","last":"SILVA"}' ) );
+	}
+
+	public function test_name_parts_only_match_whole_words(): void {
+		$this->assertSame( 'Marianne Silvano', $this->scrub( 'Marianne Silvano' ) );
+	}
+
+	public function test_short_name_parts_are_left_alone(): void {
+		$this->assertSame( 'Da Costa [name]', $this->scrubber->scrub( 'Da Costa Lima', 'Jo Da Lima', '', '' ) );
+	}
+
 	public function test_removes_the_email_in_any_case(): void {
 		$this->assertSame( '{"error":"[email] already exists"}', $this->scrub( '{"error":"MARIA.TOUR+B2@GMAIL.COM already exists"}' ) );
 	}

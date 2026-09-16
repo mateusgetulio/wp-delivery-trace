@@ -16,8 +16,10 @@ final class Scrubber {
 
 	private const NATIONAL_DIGITS = 10;
 
+	private const MIN_NAME_PART_LENGTH = 3;
+
 	/**
-	 * Replace the lead's name, email and phone, then truncate.
+	 * Replace the lead's name and its parts, email and phone, then truncate.
 	 *
 	 * Scrubbing happens before truncation so a value cut in half at the
 	 * limit can never survive.
@@ -29,12 +31,6 @@ final class Scrubber {
 	 * @return string
 	 */
 	public function scrub( string $text, string $name, string $email, string $phone ): string {
-		$name = trim( $name );
-
-		if ( '' !== $name ) {
-			$text = str_ireplace( $name, '[name]', $text );
-		}
-
 		if ( '' !== $email ) {
 			$text = str_ireplace( array( $email, rawurlencode( $email ) ), '[email]', $text );
 		}
@@ -48,6 +44,19 @@ final class Scrubber {
 		// A CRM may echo the number without the country code the visitor typed.
 		if ( strlen( $digits ) > self::NATIONAL_DIGITS ) {
 			$text = $this->replace_digits( substr( $digits, -self::NATIONAL_DIGITS ), $text );
+		}
+
+		// Name parts can appear inside the email, so the name goes last.
+		$name = trim( $name );
+
+		if ( '' !== $name ) {
+			$text = str_ireplace( $name, '[name]', $text );
+		}
+
+		foreach ( (array) preg_split( '/\s+/u', $name, -1, PREG_SPLIT_NO_EMPTY ) as $part ) {
+			if ( mb_strlen( $part ) >= self::MIN_NAME_PART_LENGTH ) {
+				$text = (string) preg_replace( '/(?<!\pL)' . preg_quote( $part, '/' ) . '(?!\pL)/iu', '[name]', $text );
+			}
 		}
 
 		return mb_substr( $text, 0, self::MAX_LENGTH );
