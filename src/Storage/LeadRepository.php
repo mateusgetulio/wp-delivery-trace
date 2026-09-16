@@ -56,6 +56,90 @@ final class LeadRepository {
 	}
 
 	/**
+	 * The most recent leads, newest first.
+	 *
+	 * @param int $limit Maximum rows.
+	 * @return array[]
+	 */
+	public function latest( int $limit ): array {
+		global $wpdb;
+
+		return $wpdb->get_results(
+			$wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT %d', Schema::leads_table(), $limit ),
+			ARRAY_A
+		);
+	}
+
+	/**
+	 * Leads an automatic runner should attempt now.
+	 *
+	 * Due retries, leads whose attempt died with the lock expired, and
+	 * pending leads whose first attempt never started.
+	 *
+	 * @param int $now          Current Unix time.
+	 * @param int $grace_period Seconds a pending lead may wait for its first attempt.
+	 * @param int $limit        Maximum rows.
+	 * @return int[]
+	 */
+	public function due_ids( int $now, int $grace_period, int $limit ): array {
+		return $this->select_due( $now, $grace_period, $limit, 0 );
+	}
+
+	/**
+	 * Whether one lead is due for an automatic attempt.
+	 *
+	 * @param int $id           Lead ID.
+	 * @param int $now          Current Unix time.
+	 * @param int $grace_period Seconds a pending lead may wait for its first attempt.
+	 * @return bool
+	 */
+	public function is_due( int $id, int $now, int $grace_period ): bool {
+		return array( $id ) === $this->select_due( $now, $grace_period, 1, $id );
+	}
+
+	/**
+	 * Due lead IDs, optionally narrowed to one lead.
+	 *
+	 * One query serves both the sweep and the single-lead check: when
+	 * $only_id is 0 the ID condition is always true.
+	 *
+	 * @param int $now          Current Unix time.
+	 * @param int $grace_period Seconds a pending lead may wait for its first attempt.
+	 * @param int $limit        Maximum rows.
+	 * @param int $only_id      Lead ID to check, or 0 for any.
+	 * @return int[]
+	 */
+	private function select_due( int $now, int $grace_period, int $limit, int $only_id ): array {
+		global $wpdb;
+
+		$ids = $wpdb->get_col(
+			$wpdb->prepare(
+				'SELECT id FROM %i
+				WHERE ( %d = 0 OR id = %d )
+				AND (
+					( status = %s AND next_attempt_at <= %s )
+					OR ( status = %s AND locked_until < %s )
+					OR ( status = %s AND created_at < %s )
+				)
+				ORDER BY id ASC
+				LIMIT %d',
+				Schema::leads_table(),
+				$only_id,
+				$only_id,
+				LeadStatus::RETRY_SCHEDULED,
+				gmdate( 'Y-m-d H:i:s', $now ),
+				LeadStatus::DELIVERING,
+				gmdate( 'Y-m-d H:i:s', $now ),
+				LeadStatus::PENDING,
+				gmdate( 'Y-m-d H:i:s', $now - $grace_period ),
+				$limit
+			)
+		);
+
+		return array_map( 'intval', $ids );
+	}
+
+	/**
 	 * Take ownership of a lead for one attempt.
 	 *
 	 * The update only succeeds if the status, attempt count and lock are

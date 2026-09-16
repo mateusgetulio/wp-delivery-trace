@@ -35,6 +35,13 @@ spl_autoload_register(
 	}
 );
 
-register_activation_hook( __FILE__, array( DeliveryTrace\Storage\Schema::class, 'install' ) );
+register_activation_hook(
+	__FILE__,
+	static function (): void {
+		DeliveryTrace\Storage\Schema::install();
+		DeliveryTrace\Delivery\Runner::schedule_sweep();
+	}
+);
+register_deactivation_hook( __FILE__, array( DeliveryTrace\Delivery\Runner::class, 'unschedule_all' ) );
 
-add_action( 'plugins_loaded', array( DeliveryTrace\Plugin::class, 'boot' ) );
+add_action( 'init', array( DeliveryTrace\Plugin::class, 'boot' ), 5 );

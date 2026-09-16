@@ -195,6 +195,7 @@ final class Deliverer {
 
 		if ( Decision::DONE === $decision->action() ) {
 			$this->leads->finish( $lead_id, LeadStatus::DELIVERED, null, $now );
+			wp_clear_scheduled_hook( self::RETRY_HOOK, array( $lead_id ) );
 
 			return LeadStatus::DELIVERED;
 		}
@@ -214,6 +215,7 @@ final class Deliverer {
 
 		$this->leads->finish( $lead_id, LeadStatus::NEEDS_ATTENTION, null, null );
 		$this->events->add( $lead_id, Step::NEEDS_ATTENTION );
+		wp_clear_scheduled_hook( self::RETRY_HOOK, array( $lead_id ) );
 
 		return LeadStatus::NEEDS_ATTENTION;
 	}

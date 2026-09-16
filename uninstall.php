@@ -19,3 +19,4 @@ delete_option( 'delivery_trace_fake_crm' );
 delete_option( 'delivery_trace_spam_count' );
 
 wp_unschedule_hook( 'delivery_trace_retry' );
+wp_unschedule_hook( 'delivery_trace_sweep' );
