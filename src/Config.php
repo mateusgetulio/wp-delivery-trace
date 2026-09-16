@@ -12,6 +12,8 @@ namespace DeliveryTrace;
  */
 final class Config {
 
+	public const DEMO_HOST = 'crm.example.com';
+
 	/**
 	 * CRM webhook URL.
 	 *
@@ -93,5 +95,14 @@ final class Config {
 	 */
 	public function is_demo(): bool {
 		return $this->demo;
+	}
+
+	/**
+	 * Whether demo mode is on and the CRM URL points at the fake CRM, so demo leads never reach a real CRM.
+	 *
+	 * @return bool
+	 */
+	public function uses_demo_crm(): bool {
+		return $this->demo && self::DEMO_HOST === wp_parse_url( $this->crm_url, PHP_URL_HOST );
 	}
 }

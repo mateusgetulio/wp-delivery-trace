@@ -19,8 +19,6 @@ use WP_Error;
  */
 final class FakeTransport {
 
-	public const HOST = 'crm.example.com';
-
 	/**
 	 * Scripted outcomes and accepted keys.
 	 *
@@ -64,7 +62,7 @@ final class FakeTransport {
 	 * @return false|array|WP_Error
 	 */
 	public function intercept( $preempt, $args, $url ) {
-		if ( false !== $preempt || self::HOST !== wp_parse_url( (string) $url, PHP_URL_HOST ) ) {
+		if ( false !== $preempt || Config::DEMO_HOST !== wp_parse_url( (string) $url, PHP_URL_HOST ) ) {
 			return $preempt;
 		}
 
@@ -89,7 +87,7 @@ final class FakeTransport {
 		$this->store->accept( $key );
 
 		if ( ScriptStore::TIMEOUT_AFTER_ACCEPT === $outcome ) {
-			return new WP_Error( 'http_request_failed', 'cURL error 28: Operation timed out after 3000 milliseconds with 0 bytes received' );
+			return new WP_Error( 'http_request_failed', 'cURL error 28: Operation timed out' );
 		}
 
 		return $this->response( 204, '' );

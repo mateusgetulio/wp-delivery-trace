@@ -1,0 +1,122 @@
+.delivery-trace-admin h1 {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.delivery-trace-demo {
+	max-width: 60rem;
+	margin: 1rem 0;
+	padding: 0.25rem 1rem 1rem;
+	border: 1px solid #c3c4c7;
+	border-left: 4px solid #2271b1;
+	background: #fff;
+}
+
+.delivery-trace-demo-buttons,
+.delivery-trace-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin: 0.75rem 0;
+}
+
+.delivery-trace-action {
+	display: inline-block;
+	margin: 0;
+}
+
+.delivery-trace-badge {
+	display: inline-block;
+	padding: 0.1rem 0.5rem;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.6;
+	background: #f0f0f1;
+	color: #1d2327;
+}
+
+.delivery-trace-badge.is-delivered {
+	background: #e6f4ea;
+	color: #0a6b2d;
+}
+
+.delivery-trace-badge.is-retry-scheduled,
+.delivery-trace-badge.is-delivering,
+.delivery-trace-badge.is-pending {
+	background: #fcf3e3;
+	color: #7a4b00;
+}
+
+.delivery-trace-badge.is-needs-attention {
+	background: #fbeaea;
+	color: #8a1f1f;
+}
+
+.delivery-trace-badge.is-flag {
+	background: #eaf2fa;
+	color: #1d4f7a;
+}
+
+.delivery-trace-meta {
+	margin: 0.25rem 0;
+	color: #50575e;
+}
+
+.delivery-trace-timeline {
+	max-width: 72rem;
+	margin-top: 1rem;
+}
+
+.delivery-trace-timeline td,
+.delivery-trace-timeline th {
+	vertical-align: top;
+}
+
+.delivery-trace-timeline .column-glyph {
+	width: 1.5rem;
+	font-weight: 700;
+	text-align: center;
+}
+
+.delivery-trace-timeline .column-step,
+.delivery-trace-timeline .column-time,
+.delivery-trace-timeline .column-delivery-id {
+	white-space: nowrap;
+}
+
+.delivery-trace-timeline .column-duration {
+	text-align: right;
+	white-space: nowrap;
+}
+
+.delivery-trace-timeline tr.is-ok .column-glyph {
+	color: #0a6b2d;
+}
+
+.delivery-trace-timeline tr.is-fail .column-glyph {
+	color: #b32d2e;
+}
+
+.delivery-trace-timeline tr.is-unknown .column-glyph,
+.delivery-trace-timeline tr.is-wait .column-glyph {
+	color: #996800;
+}
+
+.delivery-trace-timeline tr.is-info .column-glyph {
+	color: #2271b1;
+}
+
+.delivery-trace-detail {
+	display: block;
+	margin-top: 0.25rem;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.delivery-trace-summary {
+	font-size: 14px;
+	font-weight: 600;
+}

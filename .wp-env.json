@@ -6,6 +6,7 @@
 		"DELIVERY_TRACE_DEMO": true,
 		"DELIVERY_TRACE_CRM_URL": "https://crm.example.com/leads",
 		"DELIVERY_TRACE_CRM_TOKEN": "demo-token",
+		"DISABLE_WP_CRON": true,
 		"WP_DEBUG": true,
 		"WP_DEBUG_LOG": true,
 		"WP_DEBUG_DISPLAY": false

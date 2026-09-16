@@ -7,13 +7,19 @@
 
 namespace DeliveryTrace;
 
+use DeliveryTrace\Admin\Actions;
+use DeliveryTrace\Admin\AdminPage;
+use DeliveryTrace\Admin\Presenter;
 use DeliveryTrace\Delivery\Deliverer;
 use DeliveryTrace\Delivery\OutcomeClassifier;
 use DeliveryTrace\Delivery\RetryPolicy;
+use DeliveryTrace\Delivery\Runner;
 use DeliveryTrace\Demo\FakeTransport;
 use DeliveryTrace\Demo\ScriptStore;
+use DeliveryTrace\Form\Intake;
 use DeliveryTrace\Form\Shortcode;
 use DeliveryTrace\Form\SubmitHandler;
+use DeliveryTrace\Privacy\Masker;
 use DeliveryTrace\Privacy\Scrubber;
 use DeliveryTrace\Storage\EventRepository;
 use DeliveryTrace\Storage\LeadRepository;
@@ -36,13 +42,22 @@ final class Plugin {
 		$config    = Config::from_constants();
 		$leads     = new LeadRepository();
 		$events    = new EventRepository();
+		$store     = new ScriptStore();
 		$deliverer = new Deliverer( $leads, $events, new OutcomeClassifier(), self::retry_policy(), new Scrubber(), $config );
+		$intake    = new Intake( $leads, $events, $deliverer );
+		$runner    = new Runner( $leads, $deliverer );
 
+		$runner->register();
 		( new Shortcode() )->register();
-		( new SubmitHandler( $leads, $events, $deliverer ) )->register();
+		( new SubmitHandler( $intake ) )->register();
 
 		if ( $config->is_demo() ) {
-			( new FakeTransport( new ScriptStore(), $config ) )->register();
+			( new FakeTransport( $store, $config ) )->register();
+		}
+
+		if ( is_admin() ) {
+			( new AdminPage( $leads, $events, new Masker(), new Presenter(), $config, $store ) )->register();
+			( new Actions( $deliverer, $runner, $intake, $store, $config->uses_demo_crm() ) )->register();
 		}
 	}
 
