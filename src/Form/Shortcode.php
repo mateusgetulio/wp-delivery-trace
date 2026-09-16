@@ -83,8 +83,6 @@ final class Shortcode {
 		ob_start();
 		?>
 		<form id="delivery-trace-form" class="delivery-trace-form" method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" novalidate>
-			<h2><?php esc_html_e( 'Schedule a Tour', 'delivery-trace' ); ?></h2>
-
 			<?php if ( array() !== $errors ) : ?>
 				<p class="delivery-trace-error-summary" role="alert" tabindex="-1"><?php esc_html_e( 'Please fix the highlighted fields.', 'delivery-trace' ); ?></p>
 			<?php endif; ?>
@@ -119,7 +117,7 @@ final class Shortcode {
 			);
 			?>
 
-			<button type="submit"><?php esc_html_e( 'Schedule Tour', 'delivery-trace' ); ?></button>
+			<button type="submit" class="wp-element-button"><?php esc_html_e( 'Schedule Tour', 'delivery-trace' ); ?></button>
 		</form>
 		<?php
 		return (string) ob_get_clean();

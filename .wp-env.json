@@ -2,6 +2,9 @@
 	"phpVersion": "8.3",
 	"testsEnvironment": false,
 	"plugins": [ "." ],
+	"lifecycleScripts": {
+		"afterStart": "npx @wordpress/env run cli sh -c \"wp rewrite structure /%postname%/ --quiet && (wp post list --post_type=page --name=tour --format=ids | grep -q . || wp post create --post_type=page --post_title='Schedule a Tour' --post_name=tour --post_status=publish --post_content='[delivery_trace_tour_form]')\""
+	},
 	"config": {
 		"DELIVERY_TRACE_DEMO": true,
 		"DELIVERY_TRACE_CRM_URL": "https://crm.example.com/leads",
